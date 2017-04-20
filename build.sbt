@@ -42,8 +42,8 @@ lazy val warnUnusedImport = Seq(
 
 lazy val sharedSettings = warnUnusedImport ++ Seq(
   organization := "io.monix",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
+  scalaVersion := "2.11.10",
+  crossScalaVersions := Seq("2.10.6", "2.11.10", "2.12.2"),
 
   scalacOptions ++= Seq(
     // warnings
@@ -382,7 +382,7 @@ lazy val reactiveJVM = project.in(file("monix-reactive/jvm"))
   .dependsOn(executionJVM, evalJVM % "compile->compile; test->test")
   .settings(requiredMacroCompatDeps)
   .settings(reactiveCommon)
-  .settings(libraryDependencies += "org.jctools" % "jctools-core" % "2.0")
+  .settings(libraryDependencies += "org.jctools" % "jctools-core" % "2.0.1")
   .settings(mimaSettings("monix-reactive"))
 
 lazy val reactiveJS = project.in(file("monix-reactive/js"))

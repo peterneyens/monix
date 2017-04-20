@@ -26,14 +26,13 @@ import monix.execution.atomic.Atomic
 import monix.execution.cancelables.StackedCancelable
 import monix.execution.internal.Platform
 import monix.execution.internal.collection.ArrayStack
-import monix.execution.misc.ThreadLocal
+import monix.execution.misc.{NonFatal, ThreadLocal}
 import monix.execution.{Cancelable, CancelableFuture, ExecutionModel, Scheduler}
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise, TimeoutException}
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /** `Task` represents a specification for a possibly lazy or
@@ -718,6 +717,31 @@ object Task extends TaskCoreInstances {
     */
   def defer[A](fa: => Task[A]): Task[A] =
     Suspend(fa _)
+
+  /** Defers the creation of a `Task` by using the provided
+    * function, which has the ability to inject a needed
+    * [[monix.execution.Scheduler Scheduler]].
+    *
+    * Example:
+    * {{{
+    *   def measureLatency[A](source: Task[A]): Task[(A, Long)] =
+    *     Task.deferAction { implicit s =>
+    *       // We have our Scheduler, which can inject time, we
+    *       // can use it for side-effectful operations
+    *       val start = s.currentTimeMillis()
+    *
+    *       source.map { a =>
+    *         val finish = s.currentTimeMillis()
+    *         (a, finish - start)
+    *       }
+    *     }
+    * }}}
+    *
+    * @param f is the function that's going to be called when the
+    *        resulting `Task` gets evaluated
+    */
+  def deferAction[A](f: Scheduler => Task[A]): Task[A] =
+    TaskDeferAction(f)
 
   /** Promote a non-strict Scala `Future` to a `Task` of the same type.
     *

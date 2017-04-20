@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 by its authors. Some rights reserved.
+ * Copyright (c) 2014-2017 by its authors. Some rights reserved.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,26 +17,26 @@
 
 package monix.eval.internal
 
-import monix.eval.{Callback, Task}
-import monix.eval.Task.Options
+import monix.eval.Task
+import monix.execution.Scheduler
 import monix.execution.misc.NonFatal
 
-private[monix] object TaskExecuteWithOptions {
-  /**
-    * Implementation for `Task.executeWithOptions`
-    */
-  def apply[A](self: Task[A], f: Options => Options): Task[A] =
-    Task.unsafeCreate { (context, cb) =>
-      implicit val s = context.scheduler
+private[eval] object TaskDeferAction {
+  /** Implementation for `Task.deferAction`. */
+  def apply[A](f: Scheduler => Task[A]): Task[A] =
+    Task.unsafeCreate { (context, callback) =>
+      implicit val ec = context.scheduler
       var streamErrors = true
+
       try {
-        val context2 = context.copy(options = f(context.options))
+        val fa = f(ec)
         streamErrors = false
-        Task.unsafeStartTrampolined[A](self, context2, Callback.async(cb))
-      } catch {
+        Task.unsafeStartTrampolined(fa, context, callback)
+      }
+      catch {
         case NonFatal(ex) =>
-          if (streamErrors) cb.asyncOnError(ex)
-          else context.scheduler.reportFailure(ex)
+          if (streamErrors) callback.asyncOnError(ex)
+          else ec.reportFailure(ex)
       }
     }
 }

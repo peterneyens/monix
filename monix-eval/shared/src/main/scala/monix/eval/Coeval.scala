@@ -21,11 +21,10 @@ import cats.{Applicative, Eval, Group, Monoid, Semigroup}
 import monix.eval.Coeval._
 import monix.eval.instances.{CatsCoevalGroupInstance, CatsCoevalInstances, CatsCoevalMonoidInstance, CatsCoevalSemigroupInstance}
 import monix.eval.internal.LazyOnSuccess
-
+import monix.execution.misc.NonFatal
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /** `Coeval` represents lazy computations that can execute synchronously.
